@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0b1730">
   <meta name="description" content="面談前の簡単なアンケートです。">
   <title>面談前アンケート</title>
-  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./styles.css?v=4">
 </head>
 <body>
   <main class="app-shell">
@@ -50,17 +50,26 @@
         </div>
       </div>
 
-      <div id="screen-complete" class="screen complete-screen">
-        <div class="complete-icon" aria-hidden="true">✓</div>
-        <h2>ご回答ありがとうございました</h2>
-        <p class="complete-copy">
-          回答内容を確認のうえ、面談を進めさせていただきます。
-        </p>
+      <div id="screen-complete" class="screen result-screen">
+        <p class="result-eyebrow">YOUR CONSULTATION TYPE</p>
+        <div id="result-code" class="result-code">PLAN</div>
+        <h2 id="result-title" class="result-title">じっくり整理タイプ</h2>
+        <p id="result-description" class="result-description"></p>
+        <div id="result-tags" class="result-tags" aria-label="気になるテーマ"></div>
+
+        <div class="screenshot-card">
+          <span class="screenshot-icon" aria-hidden="true">▣</span>
+          <div>
+            <strong>この画面をスクショしてください</strong>
+            <p>スクリーンショットを保存して、面談当日にご参加ください。</p>
+          </div>
+        </div>
       </div>
     </section>
   </main>
 
+  <iframe id="submission-frame" name="submission-frame" title="回答送信" hidden></iframe>
   <div id="toast" class="toast" role="status"></div>
-  <script src="./app.js?v=3"></script>
+  <script src="./app.js?v=4"></script>
 </body>
 </html>
