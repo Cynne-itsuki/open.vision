@@ -16,8 +16,7 @@ const HEADERS = [
   '面談で希望すること',
   '流入元',
   'キャンペーン',
-  '参照ID',
-  '回答ページURL'
+  '参照ID'
 ];
 
 const LABELS = {
@@ -88,8 +87,7 @@ function doPost(e) {
       label_('consultationIntent', answers.consultationIntent),
       payload.source || '',
       payload.campaign || '',
-      payload.referenceId || '',
-      payload.pageUrl || ''
+      payload.referenceId || ''
     ]);
 
     const lastRow = sheet.getLastRow();
@@ -134,7 +132,6 @@ function doGet() {
   }
 }
 
-// Apps Script上でこの関数を1回実行すると、接続先と書込み権限を確認できます。
 function testConnection() {
   const sheet = getOrCreateSheet_();
 
@@ -149,8 +146,7 @@ function testConnection() {
     '',
     '',
     '',
-    '',
-    'Apps Script testConnection'
+    ''
   ]);
 
   const lastRow = sheet.getLastRow();
@@ -216,7 +212,6 @@ function getOrCreateSheet_() {
   sheet.setColumnWidths(4, 3, 150);
   sheet.setColumnWidths(7, 2, 230);
   sheet.setColumnWidths(9, 3, 130);
-  sheet.setColumnWidth(12, 280);
 
   return sheet;
 }
