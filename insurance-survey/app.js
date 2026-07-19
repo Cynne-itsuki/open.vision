@@ -1,5 +1,6 @@
 const CONFIG = {
-  endpoint: 'https://script.google.com/macros/s/AKfycby9MpxQ8JsuPotFtyAod77yZnd9-6rUfLbKyKMWJpyLoPtkvKMQwbdbHBhemcvkXtiE/exec'
+  endpoint: 'https://script.google.com/macros/s/AKfycby9MpxQ8JsuPotFtyAod77yZnd9-6rUfLbKyKMWJpyLoPtkvKMQwbdbHBhemcvkXtiE/exec',
+  submissionTimeoutMs: 12000
 };
 
 const questions = [
@@ -93,9 +94,39 @@ const questions = [
   }
 ];
 
+const RESULT_TYPES = {
+  specific: {
+    code: 'ACTI',
+    title: '行動派プランナー',
+    description: '課題を整理するだけでなく、具体的な選択肢や次の一歩まで明確にしたいタイプです。面談では、優先順位をつけながら実行しやすい形に落とし込みましょう。'
+  },
+  organize: {
+    code: 'PLAN',
+    title: 'じっくり整理タイプ',
+    description: 'まずは現在地を把握し、何から考えるべきか順序立てて整理したいタイプです。面談では、状況を一つずつ確認しながら考え方の軸を作りましょう。'
+  },
+  compare: {
+    code: 'WISE',
+    title: '比較検討タイプ',
+    description: '複数の選択肢を比べ、自分に合う判断基準を持ちたいタイプです。面談では、違いやメリット・注意点を整理しながら納得できる選択肢を探しましょう。'
+  },
+  information: {
+    code: 'INFO',
+    title: '情報収集タイプ',
+    description: 'まずは幅広く情報を集め、自分に必要なテーマを見極めたいタイプです。面談では、基本から分かりやすく整理し、気になる部分を深掘りしましょう。'
+  },
+  unsure: {
+    code: 'FIND',
+    title: '可能性発見タイプ',
+    description: 'まだ相談内容が固まっておらず、話しながら自分に必要なテーマを見つけたいタイプです。面談では、質問に答えながら優先順位を一緒に整理しましょう。'
+  }
+};
+
 let currentIndex = 0;
 let answers = {};
 let submitting = false;
+let submissionResolved = false;
+let submissionTimer = null;
 const $ = (id) => document.getElementById(id);
 const screens = document.querySelectorAll('.screen');
 
@@ -109,6 +140,8 @@ function startSurvey() {
   currentIndex = 0;
   answers = {};
   submitting = false;
+  submissionResolved = false;
+  if (submissionTimer) window.clearTimeout(submissionTimer);
   showScreen('screen-form');
   renderQuestion();
 }
@@ -277,20 +310,40 @@ function goBack() {
   renderQuestion();
 }
 
-function prepareAnswersForSubmission() {
-  const submittedAnswers = { ...answers };
-  const concernQuestion = questions.find((question) => question.id === 'primaryConcern');
+function getOptionLabel(questionId, value) {
+  const question = questions.find((item) => item.id === questionId);
+  if (!question || !question.options) return value;
+  const option = question.options.find(([optionValue]) => optionValue === value);
+  return option ? option[1] : value;
+}
 
-  if (Array.isArray(submittedAnswers.primaryConcern)) {
-    submittedAnswers.primaryConcern = submittedAnswers.primaryConcern
-      .map((value) => {
-        const option = concernQuestion.options.find(([optionValue]) => optionValue === value);
-        return option ? option[1] : value;
-      })
-      .join('、');
-  }
+function renderResult() {
+  const result = RESULT_TYPES[answers.consultationIntent] || RESULT_TYPES.unsure;
+  $('result-code').textContent = result.code;
+  $('result-title').textContent = result.title;
+  $('result-description').textContent = result.description;
 
-  return submittedAnswers;
+  const tagArea = $('result-tags');
+  tagArea.innerHTML = '';
+  const concerns = Array.isArray(answers.primaryConcern) ? answers.primaryConcern : [];
+  concerns.forEach((value) => {
+    const tag = document.createElement('span');
+    tag.className = 'result-tag';
+    tag.textContent = getOptionLabel('primaryConcern', value);
+    tagArea.appendChild(tag);
+  });
+}
+
+function buildPayload() {
+  const params = new URLSearchParams(window.location.search);
+  return {
+    submittedAtClient: new Date().toISOString(),
+    source: params.get('source') || params.get('utm_source') || '',
+    campaign: params.get('campaign') || params.get('utm_campaign') || '',
+    referenceId: params.get('ref') || '',
+    pageUrl: window.location.href,
+    answers: JSON.parse(JSON.stringify(answers))
+  };
 }
 
 function submitSurvey() {
@@ -302,35 +355,65 @@ function submitSurvey() {
   }
 
   submitting = true;
-
-  const params = new URLSearchParams(window.location.search);
-  const payload = {
-    submittedAtClient: new Date().toISOString(),
-    source: params.get('source') || params.get('utm_source') || '',
-    campaign: params.get('campaign') || params.get('utm_campaign') || '',
-    referenceId: params.get('ref') || '',
-    pageUrl: window.location.href,
-    answers: prepareAnswersForSubmission()
-  };
-
+  renderResult();
   showScreen('screen-complete');
+  submitThroughIframe(buildPayload());
+}
 
-  fetch(CONFIG.endpoint, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify(payload),
-    keepalive: true
-  }).catch((error) => {
-    console.error('Survey submission failed:', error);
-  });
+function submitThroughIframe(payload) {
+  submissionResolved = false;
+
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = CONFIG.endpoint;
+  form.target = 'submission-frame';
+  form.style.display = 'none';
+
+  const payloadInput = document.createElement('input');
+  payloadInput.type = 'hidden';
+  payloadInput.name = 'payload';
+  payloadInput.value = JSON.stringify(payload);
+
+  const originInput = document.createElement('input');
+  originInput.type = 'hidden';
+  originInput.name = 'origin';
+  originInput.value = window.location.origin;
+
+  form.append(payloadInput, originInput);
+  document.body.appendChild(form);
+  form.submit();
+  form.remove();
+
+  submissionTimer = window.setTimeout(() => {
+    if (!submissionResolved) {
+      showToast('回答記録を確認できませんでした。スクショを保存してスタッフへお見せください。');
+    }
+  }, CONFIG.submissionTimeoutMs);
+}
+
+function handleSubmissionMessage(event) {
+  const trustedOrigins = [
+    'https://script.google.com',
+    'https://script.googleusercontent.com'
+  ];
+
+  if (!trustedOrigins.includes(event.origin)) return;
+  if (!event.data || event.data.type !== 'insurance-survey-response') return;
+
+  submissionResolved = true;
+  if (submissionTimer) window.clearTimeout(submissionTimer);
+
+  if (!event.data.ok) {
+    console.error('Survey submission failed:', event.data.error || 'Unknown error');
+    showToast('回答の保存に失敗しました。スクショを保存してスタッフへお見せください。');
+  }
 }
 
 function showToast(message) {
   const toast = $('toast');
   toast.textContent = message;
   toast.classList.add('show');
-  window.setTimeout(() => toast.classList.remove('show'), 2600);
+  window.setTimeout(() => toast.classList.remove('show'), 4200);
 }
 
 function escapeHtml(value) {
@@ -346,3 +429,4 @@ function escapeHtml(value) {
 $('start-button').addEventListener('click', startSurvey);
 $('back-button').addEventListener('click', goBack);
 $('next-button').addEventListener('click', advance);
+window.addEventListener('message', handleSubmissionMessage);
