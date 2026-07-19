@@ -1,44 +1,116 @@
 'use strict';
-const q=(id,cat,title,options)=>({id,cat,title,options});
-const C=[
-q('age','BASIC PROFILE','年齢を教えてください',[['20-22','20〜22歳'],['23-25','23〜25歳'],['26-29','26〜29歳'],['30-34','30〜34歳'],['35+','35歳以上']]),
-q('employment','BASIC PROFILE','現在の働き方を教えてください',[['regular','正社員'],['contract','契約社員・派遣社員'],['parttime','アルバイト・パート'],['freelance','フリーランス・個人事業主'],['unemployed','現在は働いていない']]),
-q('job','CURRENT CAREER','現在の仕事に最も近いものを教えてください',[['realestate','不動産営業'],['doorSales','太陽光・住宅設備などの訪問販売'],['hrSales','人材紹介・求人広告の営業'],['reuseSales','買取・リユース営業'],['otherSales','その他の営業職'],['service','接客・販売・サービス職'],['office','事務・バックオフィス'],['nurse','看護師・医療職'],['teacher','保育士・教育職'],['engineer','エンジニア・IT職'],['marketing','マーケティング・広告職'],['operations','建設・製造・物流職'],['other','その他']]),
-q('income','CURRENT CAREER','現在の年収を教えてください',[['180','200万円未満'],['225','200万〜249万円'],['275','250万〜299万円'],['325','300万〜349万円'],['375','350万〜399万円'],['425','400万〜449万円'],['475','450万〜499万円'],['550','500万〜599万円'],['650','600万〜699万円'],['750','700万〜799万円'],['850','800万円以上']]),
-q('experience','EXPERIENCE','現在の職種での経験年数を教えてください',[['lt1','1年未満'],['1-2','1年以上2年未満'],['2-3','2年以上3年未満'],['3-5','3年以上5年未満'],['5-10','5年以上10年未満'],['10+','10年以上']]),
-q('role','EXPERIENCE','現在の仕事での役割に最も近いものを教えてください',[['learning','教えてもらいながら業務を行っている'],['independent','一人で担当業務を完結できる'],['training','新人や後輩の指導をしている'],['leader','チームの進捗や目標を管理している'],['manager','管理職として人員や売上を管理している'],['owner','事業や部署全体の責任を持っている']]),
-q('achievement','PERFORMANCE','仕事上の成果について、最も近いものを教えてください',[['none','まだ明確な成果はない'],['stable','任された業務を安定して行っている'],['target','設定された目標を達成したことがある'],['numbers','売上や件数など、数字で説明できる成果がある'],['repeat','継続的に目標を達成している'],['award','社内表彰や上位成績を獲得したことがある'],['team','チームや部署全体の成果を改善したことがある']]),
-q('direction','NEXT CAREER','転職するとしたら、どの方向を考えていますか？',[['same','現在と同じ職種で年収を上げたい'],['otherIndustry','現在の経験を活かして別業界へ移りたい'],['otherRole','現在の経験を活かして別職種へ移りたい'],['new','未経験の職種へ挑戦したい'],['management','管理職やリーダー職を目指したい'],['proposal','自分に合う仕事を知りたい'],['undecided','まだ具体的には考えていない']]),
-q('area','NEXT CAREER','転職先として希望する勤務地を教えてください',[['tokyo','東京'],['osaka','大阪'],['nagoya','名古屋'],['fukuoka','福岡'],['undecided','まだ決めていない']])];
-const B={
-sales:[q('salesStyle','SALES EXPERIENCE','これまで最も経験した営業スタイルを教えてください',[['b2cNew','個人向けの新規営業'],['b2bNew','法人向けの新規営業'],['visit','訪問販売'],['inside','電話・オンライン営業'],['inbound','問い合わせに対応する反響営業'],['existing','既存顧客への営業'],['multiple','複数の営業スタイルを経験している']]),q('priceBand','SALES EXPERIENCE','主に扱っていた商品の価格帯を教えてください',[['lt10','10万円未満'],['10-49','10万〜49万円'],['50-99','50万〜99万円'],['100-299','100万〜299万円'],['300+','300万円以上'],['unknown','価格は分からない'],['none','金額のある商品は扱っていない']]),q('salesPerformance','SALES EXPERIENCE','直近の営業成績に最も近いものを教えてください',[['lt80','目標達成率80％未満'],['80-99','目標達成率80〜99％'],['100','目標を達成している'],['120+','目標達成率120％以上'],['top20','社内上位20％以内'],['top','社内表彰やトップ成績の経験がある'],['unknown','具体的な数字は分からない']])],
-licensed:[q('qualification','SPECIALIZED EXPERIENCE','保有資格について、最も近いものを教えてください',[['national','国家資格を保有している'],['specialized','業務に必要な専門資格を保有している'],['multiple','複数の専門資格を保有している'],['none','資格は保有していない'],['skip','回答しない']]),q('licensedDirection','SPECIALIZED EXPERIENCE','今後のキャリアとして最も興味があるものを教えてください',[['same','資格を活かして職場を変えたい'],['corporate','資格や経験を活かして一般企業で働きたい'],['hr','人材・採用関連の仕事に興味がある'],['sales','営業や接客経験を活かせる仕事に興味がある'],['new','全く異なる職種に挑戦したい'],['undecided','まだ決めていない']])],
-digital:[q('skillLevel','SPECIALIZED EXPERIENCE','現在の実務レベルに最も近いものを教えてください',[['learning','現在学習中で実務経験はない'],['assist','補助業務を担当している'],['guided','指示を受けながら一連の業務を行える'],['independent','一人で業務を完結できる'],['owner','施策やプロジェクトの責任を持っている'],['manager','チームやプロジェクトを管理している']]),q('measurableOutcome','SPECIALIZED EXPERIENCE','実務成果をどの程度具体的に説明できますか？',[['none','まだ実務成果はない'],['tasks','担当した業務内容は説明できる'],['change','改善前後の変化を説明できる'],['numbers','売上・費用・件数などの数字で説明できる'],['multiple','複数の成果を数字で説明できる'],['team','チーム全体の成果を説明できる']])],
-general:[q('strength','TRANSFERABLE SKILLS','現在の仕事で身につけた強みに最も近いものを教えてください',[['communication','顧客対応・コミュニケーション'],['accuracy','業務の正確性・事務処理'],['data','数字やデータの管理'],['improvement','業務改善・効率化'],['management','後輩の教育・チーム管理'],['specialized','専門的な技術や資格'],['unknown','まだ明確な強みが分からない']]),q('processImprovement','TRANSFERABLE SKILLS','業務を改善した経験について教えてください',[['none','特にない'],['self','自分の作業方法を改善した'],['manual','マニュアルや手順書を作成した'],['tool','Excelやツールを使って効率化した'],['team','チーム全体の業務を改善した'],['numbers','改善効果を数字で説明できる']])]
-};
-const SALES=new Set(['realestate','doorSales','hrSales','reuseSales','otherSales']),LICENSED=new Set(['nurse','teacher']),DIGITAL=new Set(['engineer','marketing']);
-const $=id=>document.getElementById(id),cfg=window.CAREER_DIAGNOSIS_CONFIG||{};
-let qs=[],i=0,a={},name='',res=null,locked=false,saved=false;
-const branch=job=>SALES.has(job)?'sales':LICENSED.has(job)?'licensed':DIGITAL.has(job)?'digital':'general';
-const rebuild=()=>qs=[...C,...B[branch(a.job)]];
-const screen=id=>{document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));$(id).classList.add('active');scrollTo({top:0,behavior:'smooth'})};
-const cleanName=v=>v.replace(/[\u3000\s]+/g,' ').trim();
-function validate(){const n=cleanName($('full-name').value),ok=n.replace(/\s/g,'').length>=2&&$('consent').checked;$('start-btn').disabled=!ok;$('name-error').textContent=$('full-name').value&&n.replace(/\s/g,'').length<2?'姓・名を含む本名を入力してください。':'';return ok}
-function start(){if(!validate())return;name=cleanName($('full-name').value);a={};i=0;saved=false;qs=[...C];screen('quiz-screen');render()}
-function render(){const x=qs[i];$('progress-label').textContent=`QUESTION ${i+1}`;$('progress-count').textContent=`${i+1} / ${qs.length}`;$('progress-fill').style.width=`${(i+1)/qs.length*100}%`;$('question-kicker').textContent=x.cat;$('question-title').textContent=x.title;$('question-help').textContent='最も近いものを1つタップしてください。';$('back-btn').disabled=i===0;$('choices').innerHTML='';x.options.forEach(([v,l],n)=>{const b=document.createElement('button');b.type='button';b.className='choice'+(a[x.id]===v?' selected':'');b.innerHTML=`<span class="choice-index">${n+1}</span><span>${esc(l)}</span>`;b.onclick=()=>choose(x,v,b);$('choices').appendChild(b)})}
-function clearBranches(){Object.values(B).flat().forEach(x=>delete a[x.id])}
-function choose(x,v,b){if(locked)return;locked=true;const old=a[x.id];if(x.id==='job'&&old&&old!==v)clearBranches();a[x.id]=v;document.querySelectorAll('.choice').forEach(z=>{z.disabled=true;z.classList.toggle('selected',z===b)});if(x.id==='job')rebuild();setTimeout(()=>{if(i<qs.length-1){i++;locked=false;render()}else{locked=false;finish()}},230)}
-function back(){if(locked||i===0)return;i--;render()}
-function finish(){res=calc();screen('loading-screen');setTimeout(async()=>{paint(res);screen('result-screen');await save(res)},900)}
-function calc(){const cur=+a.income||325,base={180:[50,130],225:[45,120],275:[40,110],325:[30,100],375:[20,90],425:[10,80],475:[0,70],550:[-10,60],650:[-20,50],750:[-30,40],850:[-60,20]}[cur]||[20,80];let lo=base[0],hi=base[1],f=52;const add=(l,h,s)=>{lo+=l;hi+=h;f+=s};if(['target','numbers'].includes(a.achievement))add(10,20,9);if(a.achievement==='repeat')add(15,30,13);if(['award','team'].includes(a.achievement))add(25,45,17);if(a.role==='independent')f+=5;if(a.role==='training')add(5,15,8);if(a.role==='leader')add(10,25,11);if(['manager','owner'].includes(a.role))add(20,40,15);if(a.experience==='2-3')f+=5;if(a.experience==='3-5')add(5,15,8);if(['5-10','10+'].includes(a.experience))add(10,20,10);if(a.experience==='lt1')add(-10,-15,-7);if(['same','otherIndustry','management'].includes(a.direction))f+=10;if(a.direction==='otherRole')add(-5,-10,-3);if(a.direction==='new')add(-25,-30,-10);if(['proposal','undecided'].includes(a.direction))f-=4;if(a.area==='tokyo')add(0,10,4);if(a.area==='undecided')f-=3;const br=branch(a.job);if(br==='sales'){if(['b2bNew','multiple'].includes(a.salesStyle))add(10,25,8);if(['100-299','300+'].includes(a.priceBand))add(10,25,7);if(a.salesPerformance==='100')add(5,15,7);if(a.salesPerformance==='120+')add(15,30,12);if(['top20','top'].includes(a.salesPerformance))add(25,45,17);if(a.salesPerformance==='lt80')add(-15,-20,-8)}if(br==='licensed'){if(['national','multiple'].includes(a.qualification))add(5,20,10);if(a.licensedDirection==='same')add(5,15,8);if(a.licensedDirection==='new')add(-20,-25,-8)}if(br==='digital'){if(a.skillLevel==='independent')add(10,25,10);if(['owner','manager'].includes(a.skillLevel))add(20,40,15);if(['numbers','multiple','team'].includes(a.measurableOutcome))add(10,30,12);if(a.skillLevel==='learning')add(-20,-25,-10)}if(br==='general'){if(['improvement','management','specialized'].includes(a.strength))add(5,20,7);if(['team','numbers'].includes(a.processImprovement))add(10,25,10)}lo=clamp(lo,-100,140);hi=clamp(hi,-60,180);const low=Math.max(200,r10(cur+lo)),high=Math.max(low+30,r10(cur+hi)),feas=clamp(Math.round(f),25,95),t=type(cur);return{name,currentIncome:cur,low,high,feas,type:t[0],summary:t[1],strengths:strengths(),actions:actions(),directions:directions()}}
-function type(cur){const high=['repeat','award','team'].includes(a.achievement),solid=['target','numbers','repeat','award','team'].includes(a.achievement);if(a.direction==='new'||a.licensedDirection==='new')return['キャリアチェンジ成長タイプ','転職直後の年収だけでなく、数年後の市場価値まで含めて職種を選ぶことが重要なタイプです。'];if(['manager','owner'].includes(a.role)||a.direction==='management')return['マネジメント昇格タイプ','現場経験に加えて、教育・目標管理・組織運営の経験を評価へつなげやすいタイプです。'];if(high&&['same','otherIndustry'].includes(a.direction))return['即戦力ステップアップタイプ','これまでの実績を活かし、業界や企業の評価制度を変えることで年収アップを狙いやすいタイプです。'];if(cur<=425&&solid)return['隠れ高市場価値タイプ','現在の実績や役割が、今の年収に十分反映されていない可能性があるタイプです。'];if(['proposal','undecided'].includes(a.direction))return['キャリア情報収集タイプ','まずは現在の経験がどの業界や職種で評価されるかを知ることで、選択肢を整理しやすいタイプです。'];return['経験活用バランスタイプ','これまでの経験を軸に、年収・仕事内容・成長性のバランスを見ながら転職先を選ぶタイプです。']}
-function strengths(){const x=[];if(['numbers','repeat','award','team'].includes(a.achievement))x.push('成果を数字や事実で説明できる経験がある');if(['training','leader','manager','owner'].includes(a.role))x.push('教育・目標管理・マネジメント経験がある');if(['3-5','5-10','10+'].includes(a.experience))x.push('継続した実務経験がある');if(['100-299','300+'].includes(a.priceBand))x.push('高単価商材を扱った営業経験がある');if(['top20','top'].includes(a.salesPerformance))x.push('営業成績を客観的に示せる');if(['owner','manager'].includes(a.skillLevel))x.push('施策やプロジェクトに責任を持った経験がある');if(['national','multiple'].includes(a.qualification))x.push('専門資格を活かせる');for(const s of ['現在の業務経験を整理することで評価材料を増やせる','希望職種を絞ることで経験との接続を明確にできる','選考準備によって市場評価が変わる余地がある'])if(x.length<3)x.push(s);return x.slice(0,4)}
-function actions(){const x=['担当業務ではなく、課題・行動・結果の順で職務経験を整理する','売上・契約数・達成率・改善率などの数字を洗い出す',a.direction==='new'?'未経験職種では初年度年収と3年後の成長性を分けて比較する':'同職種または経験が近い求人から比較し、評価される条件を把握する'];if(a.area==='undecided')x.push('勤務地を決め、応募できる求人の母数を明確にする');return x}
-function directions(){const br=branch(a.job);if(br==='sales')return['法人営業・人材・SaaSなど営業経験を活かせる業界','成果評価の基準が明確な企業','教育・リーダー経験を活かせる営業組織'];if(br==='licensed')return['資格を活かせる別法人・別施設','人材・採用・カスタマーサポートなど対人経験を活かせる職種','未経験研修が整った一般企業'];if(br==='digital')return['実務領域と成果が一致する専門職','施策責任やプロジェクト経験を評価する企業','スキルの専門性を高められる成長企業'];return['現在の対人・業務経験を活かせる近接職種','教育体制と評価基準が明確な企業','業務改善や専門性を評価する企業']}
-function paint(r){$('result-type').textContent=r.type;$('result-summary').textContent=`${r.name}さんは、${r.summary}`;$('salary-range').textContent=`${r.low}万〜${r.high}万円`;const dl=r.low-r.currentIncome,dh=r.high-r.currentIncome,d=$('salary-diff');d.className='salary-diff';if(dh<=0){d.textContent='年収維持を前提に、仕事内容や働き方の改善を検討する水準です。';d.classList.add('down')}else if(dl<=0){d.textContent=`現在年収の維持〜年間${sgn(dh)}万円アップの可能性`;d.classList.add('neutral')}else d.textContent=`現在より年間${sgn(dl)}万〜${sgn(dh)}万円アップの可能性`;$('feasibility-label').textContent=`${r.feas}%`;$('feasibility-fill').style.width='0';setTimeout(()=>$('feasibility-fill').style.width=`${r.feas}%`,60);$('feasibility-note').textContent=r.feas>=75?'経験と希望条件の整合性が比較的高く、求人を選びやすい状態です。':r.feas>=55?'転職可能性はあります。実績整理と求人選定によって結果が変わります。':'希望職種や条件を調整すると、転職実現度を高められます。';list('strength-list',r.strengths);list('action-list',r.actions);list('direction-list',r.directions)}
-async function save(r){if(saved)return;saved=true;const st=$('save-status'),url=String(cfg.gasEndpoint||'').trim();if(!url){st.textContent='回答保存先がまだ設定されていないため、今回の回答はスプレッドシートに保存されていません。';st.className='save-status error';return}try{await fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:new URLSearchParams({payload:JSON.stringify(payload(r))})});st.textContent='氏名と回答内容をスプレッドシートへ送信しました。';st.className='save-status success'}catch(e){console.error(e);st.textContent='回答の保存に失敗しました。診断結果の表示には影響ありません。';st.className='save-status error'}}
-function payload(r){const labels={};qs.forEach(x=>{const s=x.options.find(([v])=>v===a[x.id]);labels[x.id]=s?s[1]:''});const p=new URLSearchParams(location.search);return{responseId:crypto.randomUUID?crypto.randomUUID():`r_${Date.now()}_${Math.random().toString(36).slice(2,10)}`,submittedAtClient:new Date().toISOString(),fullName:name,answers:{...a},answerLabels:labels,result:{type:r.type,estimatedIncomeLow:r.low,estimatedIncomeHigh:r.high,currentIncomeMidpoint:r.currentIncome,feasibility:r.feas},source:{ref:p.get('ref')||'',utmSource:p.get('utm_source')||'',utmMedium:p.get('utm_medium')||'',utmCampaign:p.get('utm_campaign')||'',pageUrl:location.href,referrer:document.referrer||''}}}
-async function copy(){if(!res)return;const t=`【${res.name}さんの転職年収診断】\n診断タイプ：${res.type}\n推定転職年収：${res.low}万〜${res.high}万円\n転職実現度：${res.feas}%\n※回答内容をもとにした簡易推定です。`;try{await navigator.clipboard.writeText(t)}catch(_){const x=document.createElement('textarea');x.value=t;document.body.appendChild(x);x.select();document.execCommand('copy');x.remove()}$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),1700)}
-function restart(){i=0;a={};qs=[];name='';res=null;saved=false;$('full-name').value='';$('consent').checked=false;$('start-btn').disabled=true;$('name-error').textContent='';$('save-status').textContent='回答内容を保存しています。';$('save-status').className='save-status';screen('start-screen')}
-const list=(id,x)=>$(id).innerHTML=x.map(v=>`<li>${esc(v)}</li>`).join(''),r10=v=>Math.round(v/10)*10,clamp=(v,min,max)=>Math.min(max,Math.max(min,v)),sgn=v=>v>0?`＋${v}`:v<0?`−${Math.abs(v)}`:'±0',esc=v=>String(v).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-document.addEventListener('DOMContentLoaded',()=>{$('full-name').oninput=validate;$('consent').onchange=validate;$('start-btn').onclick=start;$('back-btn').onclick=back;$('copy-btn').onclick=copy;$('restart-btn').onclick=restart;$('full-name').onkeydown=e=>{if(e.key==='Enter'&&validate())start()}});
+
+function paintResult(value) {
+  $('result-type').textContent = value.type;
+  $('result-summary').textContent = `${fullName}さんは、${value.summary}`;
+  $('analysis-badge').textContent = value.aiUsed ? `自由記述をAI分析済み${value.aiModel ? `・${value.aiModel}` : ''}` : '選択式回答による基本診断';
+  $('salary-range').textContent = `${value.low}万〜${value.high}万円`;
+
+  const lowDiff = value.low - value.currentIncome;
+  const highDiff = value.high - value.currentIncome;
+  const diff = $('salary-diff');
+  diff.className = 'salary-diff';
+  if (highDiff <= 0) {
+    diff.textContent = '年収維持を前提に、仕事内容や働き方の改善を検討する水準です。';
+    diff.classList.add('down');
+  } else if (lowDiff <= 0) {
+    diff.textContent = `現在年収の維持〜年間${signed(highDiff)}万円アップの可能性`;
+    diff.classList.add('neutral');
+  } else {
+    diff.textContent = `現在より年間${signed(lowDiff)}万〜${signed(highDiff)}万円アップの可能性`;
+  }
+
+  $('feasibility-label').textContent = `${value.feasibility}%`;
+  $('feasibility-fill').style.width = '0';
+  window.setTimeout(() => { $('feasibility-fill').style.width = `${value.feasibility}%`; }, 70);
+  $('feasibility-note').textContent = value.feasibility >= 75
+    ? '経験と希望条件の整合性が比較的高く、求人を選びやすい状態です。'
+    : value.feasibility >= 55
+      ? '転職可能性はあります。実績整理と求人選定によって結果が変わります。'
+      : '希望職種や条件を調整すると、転職実現度を高められます。';
+
+  renderList('strength-list', value.strengths);
+  renderList('action-list', value.actions);
+  renderList('direction-list', value.directions);
+}
+
+function updateSaveStatus(response) {
+  const status = $('save-status');
+  if (response.saved) {
+    status.textContent = response.result.aiUsed
+      ? '氏名・回答内容・AI分析結果をスプレッドシートへ保存しました。'
+      : '氏名と回答内容を保存しました。AI分析は利用できなかったため、基本診断を表示しています。';
+    status.className = 'save-status success';
+  } else {
+    status.textContent = '診断結果は表示できましたが、スプレッドシートへの保存に失敗しました。';
+    status.className = 'save-status error';
+  }
+}
+
+async function copyResult() {
+  if (!result) return;
+  const text = `【${fullName}さんの転職年収診断】\n診断タイプ：${result.type}\n推定転職年収：${result.low}万〜${result.high}万円\n転職実現度：${result.feasibility}%\n※回答内容をもとにした簡易推定です。`;
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch (_) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    textarea.remove();
+  }
+  $('toast').classList.add('show');
+  window.setTimeout(() => $('toast').classList.remove('show'), 1700);
+}
+
+function restartDiagnosis() {
+  cleanupPendingRequest();
+  stopLoadingAnimation();
+  questions = [];
+  questionIndex = 0;
+  answers = {};
+  fullName = '';
+  result = null;
+  locked = false;
+  $('full-name').value = '';
+  $('consent').checked = false;
+  $('start-btn').disabled = true;
+  $('name-error').textContent = '';
+  $('save-status').textContent = '回答内容を保存しています。';
+  $('save-status').className = 'save-status';
+  clearNarratives();
+  showScreen('start-screen');
+}
+
+function createRequestId() {
+  if (window.crypto && typeof window.crypto.randomUUID === 'function') return window.crypto.randomUUID();
+  return `r_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+}
+
+function renderList(id, items) {
+  $(id).innerHTML = items.map(item => `<li>${escapeHtml(item)}</li>`).join('');
+}
+
+function round10(value) { return Math.round(value / 10) * 10; }
+function clamp(value, min, max) { return Math.min(max, Math.max(min, Number(value))); }
+function signed(value) { return value > 0 ? `＋${value}` : value < 0 ? `−${Math.abs(value)}` : '±0'; }
+function escapeHtml(value) {
+  return String(value).replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
+}
+
+window.addEventListener('message', handleAppsScriptMessage);
+document.addEventListener('DOMContentLoaded', () => {
+  $('full-name').addEventListener('input', validateStart);
+  $('consent').addEventListener('change', validateStart);
+  $('start-btn').addEventListener('click', startDiagnosis);
+  $('back-btn').addEventListener('click', goBack);
+  $('narrative-back').addEventListener('click', backToQuestions);
+  $('analyze-btn').addEventListener('click', startAnalysis);
+  $('copy-btn').addEventListener('click', copyResult);
+  $('restart-btn').addEventListener('click', restartDiagnosis);
+  ['work-details', 'achievement-details', 'career-goal'].forEach(id => $(id).addEventListener('input', validateNarratives));
+  $('full-name').addEventListener('keydown', event => {
+    if (event.key === 'Enter' && validateStart()) startDiagnosis();
+  });
+});
