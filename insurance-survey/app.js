@@ -98,28 +98,67 @@ const RESULT_TYPES = {
   specific: {
     code: 'ACTI',
     title: '行動派プランナー',
-    description: '課題を整理するだけでなく、具体的な選択肢や次の一歩まで明確にしたいタイプです。面談では、優先順位をつけながら実行しやすい形に落とし込みましょう。'
+    description: '情報を集めるだけではなく、具体的な選択肢と次の一歩まで明確にしたいタイプです。納得できる材料がそろえば、決断から行動までスピーディーに進められます。',
+    traits: [
+      '結論だけでなく、具体的な進め方まで知りたい',
+      '選択肢を整理したうえで、次の行動を決めたい',
+      '目的と優先順位が明確になると動きやすい'
+    ],
+    message: '面談では、実行可能な選択肢を絞り込み、いつ・何から始めるかまで具体化すると満足度が高まりやすいでしょう。'
   },
   organize: {
     code: 'PLAN',
     title: 'じっくり整理タイプ',
-    description: 'まずは現在地を把握し、何から考えるべきか順序立てて整理したいタイプです。面談では、状況を一つずつ確認しながら考え方の軸を作りましょう。'
+    description: 'すぐに答えを出すよりも、現在地を把握し、必要なことを順序立てて整理したいタイプです。状況を見える化することで、自分に合う判断軸を作れます。',
+    traits: [
+      'まずは現状を正しく把握してから考えたい',
+      '複雑な情報を一つずつ整理すると安心できる',
+      '無理のない順番とペースを大切にしている'
+    ],
+    message: '面談では、現状・理想・優先順位の3つを分けて整理すると、今やるべきことが明確になりやすいでしょう。'
   },
   compare: {
     code: 'WISE',
     title: '比較検討タイプ',
-    description: '複数の選択肢を比べ、自分に合う判断基準を持ちたいタイプです。面談では、違いやメリット・注意点を整理しながら納得できる選択肢を探しましょう。'
+    description: '一つの案をそのまま受け入れるのではなく、複数の選択肢を比べて納得したいタイプです。違いと判断基準が明確になるほど、自信を持って選べます。',
+    traits: [
+      'メリットだけでなく注意点も把握したい',
+      '複数案を同じ条件で比較して判断したい',
+      '自分なりの判断基準を持つことを重視する'
+    ],
+    message: '面談では、費用・将来性・柔軟性など、比較したい軸を先に決めておくと、納得できる判断につながりやすいでしょう。'
   },
   information: {
     code: 'INFO',
     title: '情報収集タイプ',
-    description: 'まずは幅広く情報を集め、自分に必要なテーマを見極めたいタイプです。面談では、基本から分かりやすく整理し、気になる部分を深掘りしましょう。'
+    description: '今すぐ何かを決めるより、まずは幅広く知識を得て、自分に必要なテーマを見極めたいタイプです。基礎を理解するほど、将来の選択肢が広がります。',
+    traits: [
+      'まずは基本から分かりやすく知りたい',
+      '知らないまま判断することを避けたい',
+      '必要性を理解してから検討を進めたい'
+    ],
+    message: '面談では、専門用語を減らし、全体像から具体例へ進めてもらうことで、必要な情報を効率よく吸収できるでしょう。'
   },
   unsure: {
     code: 'FIND',
     title: '可能性発見タイプ',
-    description: 'まだ相談内容が固まっておらず、話しながら自分に必要なテーマを見つけたいタイプです。面談では、質問に答えながら優先順位を一緒に整理しましょう。'
+    description: 'まだ相談したい内容が固まっておらず、対話を通じて自分に必要なテーマを見つけたいタイプです。質問に答える中で、意外な課題や可能性が見えてきます。',
+    traits: [
+      '何から手をつけるべきか迷っている',
+      '自分では気づいていない選択肢も知りたい',
+      '会話しながら優先順位を見つけたい'
+    ],
+    message: '面談では、今の不安や将来の希望を自由に話すことから始めると、優先して整理すべきテーマが見つかりやすいでしょう。'
   }
+};
+
+const CONCERN_FOCUS = {
+  protection: '現在の保障内容と、毎月支払っている保険料のバランス',
+  asset_building: '無理なく続けられる積立額と、自分に合う資産形成の方法',
+  retirement: '将来必要になりそうな金額と、今から準備するペース',
+  education: '教育費が必要になる時期と、家計に負担をかけにくい備え方',
+  household: '固定費の見直しと、毎月無理なく残せる金額',
+  unsure: '現在の状況から、優先して考えるべきテーマを見つけること'
 };
 
 let currentIndex = 0;
@@ -158,13 +197,9 @@ function renderQuestion() {
   const area = $('answer-area');
   area.innerHTML = '';
 
-  if (question.type === 'text') {
-    renderTextQuestion(question, area);
-  } else if (question.type === 'multi') {
-    renderMultiChoiceQuestion(question, area);
-  } else {
-    renderChoiceQuestion(question, area);
-  }
+  if (question.type === 'text') renderTextQuestion(question, area);
+  else if (question.type === 'multi') renderMultiChoiceQuestion(question, area);
+  else renderChoiceQuestion(question, area);
 
   const needsNextButton = question.type === 'text' || question.type === 'multi';
   $('back-button').disabled = currentIndex === 0 || submitting;
@@ -182,11 +217,9 @@ function renderChoiceQuestion(question, area) {
     const button = createChoiceButton(index, label, answers[question.id] === value);
     button.addEventListener('click', () => {
       if (submitting) return;
-
       answers[question.id] = value;
       list.querySelectorAll('.choice-button').forEach((item) => item.classList.remove('selected'));
       button.classList.add('selected');
-
       window.setTimeout(() => {
         if (currentIndex === questions.length - 1) submitSurvey();
         else advance();
@@ -211,7 +244,6 @@ function renderMultiChoiceQuestion(question, area) {
 
     button.addEventListener('click', () => {
       if (submitting) return;
-
       const currentValues = answers[question.id];
       const existingIndex = currentValues.indexOf(value);
 
@@ -279,14 +311,8 @@ function isCurrentAnswerValid() {
   const question = questions[currentIndex];
   const answer = answers[question.id];
 
-  if (question.type === 'text') {
-    return Boolean((answer || '').trim().length >= 2);
-  }
-
-  if (question.type === 'multi') {
-    return Array.isArray(answer) && answer.length > 0;
-  }
-
+  if (question.type === 'text') return Boolean((answer || '').trim().length >= 2);
+  if (question.type === 'multi') return Array.isArray(answer) && answer.length > 0;
   return Boolean(answer);
 }
 
@@ -317,21 +343,37 @@ function getOptionLabel(questionId, value) {
   return option ? option[1] : value;
 }
 
+function appendListItems(elementId, items) {
+  const list = $(elementId);
+  list.innerHTML = '';
+  items.forEach((text) => {
+    const item = document.createElement('li');
+    item.textContent = text;
+    list.appendChild(item);
+  });
+}
+
 function renderResult() {
   const result = RESULT_TYPES[answers.consultationIntent] || RESULT_TYPES.unsure;
   $('result-code').textContent = result.code;
   $('result-title').textContent = result.title;
   $('result-description').textContent = result.description;
+  $('result-message-text').textContent = result.message;
+  appendListItems('result-traits', result.traits);
 
+  const concerns = Array.isArray(answers.primaryConcern) ? answers.primaryConcern : [];
   const tagArea = $('result-tags');
   tagArea.innerHTML = '';
-  const concerns = Array.isArray(answers.primaryConcern) ? answers.primaryConcern : [];
+
   concerns.forEach((value) => {
     const tag = document.createElement('span');
     tag.className = 'result-tag';
     tag.textContent = getOptionLabel('primaryConcern', value);
     tagArea.appendChild(tag);
   });
+
+  const focusItems = concerns.map((value) => CONCERN_FOCUS[value]).filter(Boolean);
+  appendListItems('result-focus', focusItems);
 }
 
 function buildPayload() {
@@ -341,7 +383,6 @@ function buildPayload() {
     source: params.get('source') || params.get('utm_source') || '',
     campaign: params.get('campaign') || params.get('utm_campaign') || '',
     referenceId: params.get('ref') || '',
-    pageUrl: window.location.href,
     answers: JSON.parse(JSON.stringify(answers))
   };
 }
