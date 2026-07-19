@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0b1730">
+  <meta name="theme-color" content="#08152b">
   <meta name="description" content="面談前の簡単なアンケートです。">
   <title>面談前アンケート</title>
-  <link rel="stylesheet" href="./styles.css?v=4">
+  <link rel="stylesheet" href="./styles.css?v=5">
 </head>
 <body>
   <main class="app-shell">
@@ -51,16 +51,54 @@
       </div>
 
       <div id="screen-complete" class="screen result-screen">
-        <p class="result-eyebrow">YOUR CONSULTATION TYPE</p>
-        <div id="result-code" class="result-code">PLAN</div>
-        <h2 id="result-title" class="result-title">じっくり整理タイプ</h2>
-        <p id="result-description" class="result-description"></p>
-        <div id="result-tags" class="result-tags" aria-label="気になるテーマ"></div>
+        <div class="result-heading">
+          <p class="result-eyebrow">YOUR CONSULTATION TYPE</p>
+          <div id="result-code" class="result-code">PLAN</div>
+          <div class="result-heading-copy">
+            <span class="result-label">あなたの相談タイプは</span>
+            <h2 id="result-title" class="result-title">じっくり整理タイプ</h2>
+            <p id="result-description" class="result-description"></p>
+          </div>
+        </div>
+
+        <div class="result-grid">
+          <section class="result-card result-card-feature">
+            <span class="result-card-number">01</span>
+            <div>
+              <p class="result-card-label">TYPE PROFILE</p>
+              <h3>あなたの傾向</h3>
+              <ul id="result-traits" class="result-list"></ul>
+            </div>
+          </section>
+
+          <section class="result-card">
+            <span class="result-card-number">02</span>
+            <div>
+              <p class="result-card-label">YOUR INTERESTS</p>
+              <h3>気になっているテーマ</h3>
+              <div id="result-tags" class="result-tags" aria-label="気になるテーマ"></div>
+            </div>
+          </section>
+
+          <section class="result-card result-card-wide">
+            <span class="result-card-number">03</span>
+            <div>
+              <p class="result-card-label">MEETING GUIDE</p>
+              <h3>面談で整理するとよいこと</h3>
+              <ul id="result-focus" class="result-list focus-list"></ul>
+            </div>
+          </section>
+        </div>
+
+        <div class="result-message">
+          <span class="result-message-mark">“</span>
+          <p id="result-message-text"></p>
+        </div>
 
         <div class="screenshot-card">
           <span class="screenshot-icon" aria-hidden="true">▣</span>
           <div>
-            <strong>この画面をスクショしてください</strong>
+            <strong>この診断結果をスクショしてください</strong>
             <p>スクリーンショットを保存して、面談当日にご参加ください。</p>
           </div>
         </div>
@@ -70,6 +108,6 @@
 
   <iframe id="submission-frame" name="submission-frame" title="回答送信" hidden></iframe>
   <div id="toast" class="toast" role="status"></div>
-  <script src="./app.js?v=4"></script>
+  <script src="./app.js?v=5"></script>
 </body>
 </html>
