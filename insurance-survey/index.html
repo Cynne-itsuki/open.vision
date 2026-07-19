@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1730">
+  <meta name="description" content="お金と暮らしに関する面談前アンケートです。">
+  <title>お金と暮らしの事前アンケート</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="site-header" aria-label="サイト情報">
+      <span class="site-mark">MONEY &amp; LIFE</span>
+      <span class="site-label">PRE-INTERVIEW FORM</span>
+    </header>
+
+    <section class="panel" aria-live="polite">
+      <div id="screen-start" class="screen active hero">
+        <p class="eyebrow">面談前の状況整理</p>
+        <h1>今のお金と将来について<br><span class="gradient-text">簡単に教えてください</span></h1>
+        <p class="hero-copy">
+          現在の家計・保障・資産形成について、面談で確認したい内容を事前に整理するアンケートです。
+          回答内容をもとに、相談テーマに合う担当者を選定します。
+        </p>
+        <div class="badge-row" aria-label="アンケート概要">
+          <span class="badge">約3分</span>
+          <span class="badge">選択式中心</span>
+          <span class="badge">商品申込みではありません</span>
+        </div>
+        <button id="start-button" class="button button-primary" type="button">アンケートを始める</button>
+        <p class="small-note">
+          氏名・年収帯・金融資産などの情報を取得します。利用目的と取扱いを確認のうえご回答ください。
+        </p>
+      </div>
+
+      <div id="screen-form" class="screen">
+        <div class="progress-header">
+          <div class="progress-meta">
+            <span id="section-label">BASIC INFORMATION</span>
+            <span id="progress-count">1 / 16</span>
+          </div>
+          <div class="progress-track" aria-hidden="true">
+            <div id="progress-fill" class="progress-fill"></div>
+          </div>
+        </div>
+
+        <div class="question-area">
+          <p id="question-kicker" class="question-kicker"></p>
+          <h2 id="question-title" class="question-title"></h2>
+          <p id="question-help" class="question-help"></p>
+          <div id="answer-area"></div>
+
+          <div class="navigation-row">
+            <button id="back-button" class="button button-secondary" type="button">戻る</button>
+            <button id="next-button" class="button button-primary" type="button">次へ</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="screen-complete" class="screen complete-screen">
+        <div class="complete-icon" aria-hidden="true">✓</div>
+        <p class="eyebrow">THANK YOU</p>
+        <h2>ご回答ありがとうございました</h2>
+        <p class="complete-copy">
+          面談では、回答内容をもとに現在の状況と優先して整理したいテーマを確認します。
+          この回答だけで保険商品の推奨や契約判断が行われることはありません。
+        </p>
+        <div class="complete-card">
+          <strong>次の流れ</strong>
+          <p>担当者が回答内容を確認し、面談時に必要な項目を改めてヒアリングします。</p>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <button id="privacy-button" class="text-button" type="button">個人情報の取扱いを確認</button>
+    </footer>
+  </main>
+
+  <dialog id="privacy-dialog" class="privacy-dialog">
+    <div class="dialog-body">
+      <div class="dialog-head">
+        <h2>個人情報の取扱い</h2>
+        <button id="privacy-close" class="dialog-close" type="button" aria-label="閉じる">×</button>
+      </div>
+      <div id="privacy-content" class="privacy-content"></div>
+    </div>
+  </dialog>
+
+  <div id="toast" class="toast" role="status"></div>
+  <script src="./app.js?v=1"></script>
+</body>
+</html>
