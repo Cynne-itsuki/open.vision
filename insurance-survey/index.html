@@ -4,23 +4,18 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0b1730">
-  <meta name="description" content="お金に関する面談前の簡単なアンケートです。">
+  <meta name="description" content="面談前の簡単なアンケートです。">
   <title>面談前アンケート</title>
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
   <main class="app-shell">
-    <header class="site-header" aria-label="サイト情報">
-      <span class="site-mark">MONEY &amp; LIFE</span>
-      <span class="site-label">PRE-INTERVIEW FORM</span>
-    </header>
-
     <section class="panel" aria-live="polite">
       <div id="screen-start" class="screen active hero">
-        <p class="eyebrow">面談前の簡単なアンケート</p>
-        <h1>今のお仕事やお金について<br><span class="gradient-text">簡単に教えてください</span></h1>
+        <p class="eyebrow">面談前アンケート</p>
+        <h1>現在の状況について<br><span class="gradient-text">簡単に教えてください</span></h1>
         <p class="hero-copy">
-          面談をスムーズに進めるため、現在の状況と相談したい内容を簡単に確認します。
+          面談をスムーズに進めるため、現在の状況と相談したい内容を確認します。
           回答は全部で6問です。
         </p>
         <div class="badge-row" aria-label="アンケート概要">
@@ -34,7 +29,7 @@
       <div id="screen-form" class="screen">
         <div class="progress-header">
           <div class="progress-meta">
-            <span id="section-label">BASIC INFORMATION</span>
+            <span id="section-label">基本情報</span>
             <span id="progress-count">1 / 6</span>
           </div>
           <div class="progress-track" aria-hidden="true">
@@ -57,7 +52,6 @@
 
       <div id="screen-complete" class="screen complete-screen">
         <div class="complete-icon" aria-hidden="true">✓</div>
-        <p class="eyebrow">THANK YOU</p>
         <h2>ご回答ありがとうございました</h2>
         <p class="complete-copy">
           回答内容を確認のうえ、面談を進めさせていただきます。
@@ -67,6 +61,6 @@
   </main>
 
   <div id="toast" class="toast" role="status"></div>
-  <script src="./app.js?v=2"></script>
+  <script src="./app.js?v=3"></script>
 </body>
 </html>
