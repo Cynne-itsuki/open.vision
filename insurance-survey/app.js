@@ -1,6 +1,6 @@
 const CONFIG = {
   // Google Apps Scriptをウェブアプリとして公開したURLを設定してください。
-  endpoint: ''
+  endpoint: 'https://script.google.com/macros/s/AKfycby9MpxQ8JsuPotFtyAod77yZnd9-6rUfLbKyKMWJpyLoPtkvKMQwbdbHBhemcvkXtiE/exec'
 };
 
 const questions = [
