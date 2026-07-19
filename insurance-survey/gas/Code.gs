@@ -1,5 +1,25 @@
 const SHEET_NAME = 'insurance_survey_test';
 
+// スプレッドシートURLの /d/ と /edit の間にあるIDを設定すると確実です。
+// スプレッドシートから「拡張機能 → Apps Script」で開いた場合は空欄でも動作します。
+const SPREADSHEET_ID = '';
+const ALLOWED_ORIGIN = 'https://cynne-itsuki.github.io';
+
+const HEADERS = [
+  '回答受信日時',
+  '回答端末日時',
+  '氏名',
+  '年齢',
+  '働き方',
+  '本人年収',
+  '気になること（複数）',
+  '面談で希望すること',
+  '流入元',
+  'キャンペーン',
+  '参照ID',
+  '回答ページURL'
+];
+
 const LABELS = {
   ageRange: {
     '18-24': '18〜24歳',
@@ -48,10 +68,14 @@ const LABELS = {
 };
 
 function doPost(e) {
+  const lock = LockService.getScriptLock();
+
   try {
-    const payload = JSON.parse(e.postData.contents || '{}');
-    const sheet = getOrCreateSheet_();
+    lock.waitLock(10000);
+
+    const payload = parsePayload_(e);
     const answers = payload.answers || {};
+    const sheet = getOrCreateSheet_();
 
     sheet.appendRow([
       new Date(),
@@ -60,7 +84,7 @@ function doPost(e) {
       label_('ageRange', answers.ageRange),
       label_('employment', answers.employment),
       label_('annualIncome', answers.annualIncome),
-      label_('primaryConcern', answers.primaryConcern),
+      labels_('primaryConcern', answers.primaryConcern),
       label_('consultationIntent', answers.consultationIntent),
       payload.source || '',
       payload.campaign || '',
@@ -70,53 +94,129 @@ function doPost(e) {
 
     const lastRow = sheet.getLastRow();
     sheet.getRange(lastRow, 1, 1, 2).setNumberFormat('yyyy/mm/dd hh:mm:ss');
+    SpreadsheetApp.flush();
 
-    return json_({ ok: true });
+    return iframeResponse_({
+      type: 'insurance-survey-response',
+      ok: true,
+      row: lastRow
+    });
   } catch (error) {
-    console.error(error);
-    return json_({ ok: false, error: String(error) });
+    console.error(error && error.stack ? error.stack : error);
+
+    return iframeResponse_({
+      type: 'insurance-survey-response',
+      ok: false,
+      error: String(error)
+    });
+  } finally {
+    try {
+      lock.releaseLock();
+    } catch (error) {
+      // ロック未取得時は何もしない
+    }
   }
 }
 
 function doGet() {
-  return json_({ ok: true, service: 'insurance-survey-test' });
+  try {
+    const sheet = getOrCreateSheet_();
+    return json_({
+      ok: true,
+      service: 'insurance-survey-test',
+      sheet: sheet.getName()
+    });
+  } catch (error) {
+    return json_({
+      ok: false,
+      error: String(error)
+    });
+  }
+}
+
+// Apps Script上でこの関数を1回実行すると、接続先と書込み権限を確認できます。
+function testConnection() {
+  const sheet = getOrCreateSheet_();
+
+  sheet.appendRow([
+    new Date(),
+    '',
+    '接続テスト',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    'Apps Script testConnection'
+  ]);
+
+  const lastRow = sheet.getLastRow();
+  sheet.getRange(lastRow, 1).setNumberFormat('yyyy/mm/dd hh:mm:ss');
+  SpreadsheetApp.flush();
+
+  console.log('接続テスト成功: ' + sheet.getParent().getUrl());
+}
+
+function parsePayload_(e) {
+  if (!e) throw new Error('リクエスト情報がありません。');
+
+  if (e.parameter && e.parameter.payload) {
+    return JSON.parse(e.parameter.payload);
+  }
+
+  if (e.postData && e.postData.contents) {
+    return JSON.parse(e.postData.contents);
+  }
+
+  throw new Error('回答データがありません。');
+}
+
+function getSpreadsheet_() {
+  const configuredId = String(SPREADSHEET_ID || '').trim();
+
+  if (configuredId) {
+    return SpreadsheetApp.openById(configuredId);
+  }
+
+  const activeSpreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+
+  if (!activeSpreadsheet) {
+    throw new Error(
+      '接続先スプレッドシートを特定できません。Code.gsのSPREADSHEET_IDを設定してください。'
+    );
+  }
+
+  return activeSpreadsheet;
 }
 
 function getOrCreateSheet_() {
-  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  const spreadsheet = getSpreadsheet_();
   let sheet = spreadsheet.getSheetByName(SHEET_NAME);
-  if (!sheet) sheet = spreadsheet.insertSheet(SHEET_NAME);
 
-  if (sheet.getLastRow() === 0) {
-    const headers = [
-      '回答受信日時',
-      '回答端末日時',
-      '氏名',
-      '年齢',
-      '働き方',
-      '本人年収',
-      '最も相談したいテーマ',
-      '面談で希望すること',
-      '流入元',
-      'キャンペーン',
-      '参照ID',
-      '回答ページURL'
-    ];
-
-    sheet.appendRow(headers);
-    sheet.setFrozenRows(1);
-    sheet.getRange(1, 1, 1, headers.length)
-      .setFontWeight('bold')
-      .setBackground('#1f4e78')
-      .setFontColor('#ffffff');
-    sheet.getRange(1, 1, 1, headers.length).createFilter();
-    sheet.setColumnWidths(1, 2, 145);
-    sheet.setColumnWidth(3, 150);
-    sheet.setColumnWidths(4, 3, 150);
-    sheet.setColumnWidths(7, 2, 230);
-    sheet.setColumnWidths(9, 3, 130);
-    sheet.setColumnWidth(12, 280);
+  if (!sheet) {
+    sheet = spreadsheet.insertSheet(SHEET_NAME);
   }
+
+  sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
+  sheet.setFrozenRows(1);
+  sheet.getRange(1, 1, 1, HEADERS.length)
+    .setFontWeight('bold')
+    .setBackground('#1f4e78')
+    .setFontColor('#ffffff');
+
+  if (!sheet.getFilter()) {
+    sheet.getRange(1, 1, Math.max(sheet.getLastRow(), 1), HEADERS.length).createFilter();
+  }
+
+  sheet.setColumnWidths(1, 2, 145);
+  sheet.setColumnWidth(3, 150);
+  sheet.setColumnWidths(4, 3, 150);
+  sheet.setColumnWidths(7, 2, 230);
+  sheet.setColumnWidths(9, 3, 130);
+  sheet.setColumnWidth(12, 280);
 
   return sheet;
 }
@@ -124,6 +224,30 @@ function getOrCreateSheet_() {
 function label_(field, value) {
   if (!value) return '';
   return (LABELS[field] && LABELS[field][value]) || value;
+}
+
+function labels_(field, value) {
+  if (!value) return '';
+
+  const values = Array.isArray(value) ? value : [value];
+  return values.map(function (item) {
+    return label_(field, item);
+  }).join('、');
+}
+
+function iframeResponse_(data) {
+  const script =
+    '<!doctype html><html><body><script>' +
+    'window.parent.postMessage(' +
+    JSON.stringify(data) +
+    ',' +
+    JSON.stringify(ALLOWED_ORIGIN) +
+    ');' +
+    '<\/script></body></html>';
+
+  return HtmlService
+    .createHtmlOutput(script)
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
 function json_(data) {
