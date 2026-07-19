@@ -3,10 +3,10 @@
 function submitThroughIframe(payload) {
   submissionResolved = false;
 
-  const compatiblePayload = {
+  const compatiblePayload = normalizePayloadForSpreadsheet({
     ...payload,
     submissionId: createSubmissionId()
-  };
+  });
 
   fetch(CONFIG.endpoint, {
     method: 'POST',
@@ -27,6 +27,19 @@ function submitThroughIframe(payload) {
       console.error('Survey submission failed:', error);
       showToast('回答を送信できませんでした。通信環境を確認して、もう一度お試しください。');
     });
+}
+
+function normalizePayloadForSpreadsheet(payload) {
+  const normalized = JSON.parse(JSON.stringify(payload));
+  const concerns = normalized.answers && normalized.answers.primaryConcern;
+
+  if (Array.isArray(concerns)) {
+    normalized.answers.primaryConcern = concerns
+      .map((value) => getOptionLabel('primaryConcern', value))
+      .join('、');
+  }
+
+  return normalized;
 }
 
 function createSubmissionId() {
