@@ -1,12 +1,11 @@
 const CONFIG = {
-  // Google Apps Scriptをウェブアプリとして公開したURLを設定してください。
   endpoint: 'https://script.google.com/macros/s/AKfycby9MpxQ8JsuPotFtyAod77yZnd9-6rUfLbKyKMWJpyLoPtkvKMQwbdbHBhemcvkXtiE/exec'
 };
 
 const questions = [
   {
     id: 'fullName',
-    section: 'BASIC INFORMATION',
+    section: '基本情報',
     kicker: 'お客様情報',
     title: 'お名前をフルネームで入力してください',
     help: '入力後、「次へ」を押してください。',
@@ -16,7 +15,7 @@ const questions = [
   },
   {
     id: 'ageRange',
-    section: 'BASIC INFORMATION',
+    section: '基本情報',
     kicker: '年齢',
     title: '年齢に最も近いものを選んでください',
     options: [
@@ -31,7 +30,7 @@ const questions = [
   },
   {
     id: 'employment',
-    section: 'BASIC INFORMATION',
+    section: '基本情報',
     kicker: '働き方',
     title: '現在の働き方を教えてください',
     options: [
@@ -47,7 +46,7 @@ const questions = [
   },
   {
     id: 'annualIncome',
-    section: 'FINANCIAL STATUS',
+    section: '現在の状況',
     kicker: '年収',
     title: '現在のご本人の年収を教えてください',
     help: '税込・概算で構いません。',
@@ -64,10 +63,11 @@ const questions = [
   },
   {
     id: 'primaryConcern',
-    section: 'CONSULTATION THEME',
-    kicker: '相談テーマ',
-    title: '今回、最も相談したいテーマは何ですか？',
-    help: '最も近いものを1つ選んでください。',
+    section: '相談内容',
+    kicker: '気になること',
+    title: '気になることをすべて選択してください',
+    help: '複数選択できます。選択後に「次へ」を押してください。',
+    type: 'multi',
     options: [
       ['protection', '生命保険・医療保険の見直し'],
       ['asset_building', '貯蓄・資産形成について'],
@@ -79,10 +79,10 @@ const questions = [
   },
   {
     id: 'consultationIntent',
-    section: 'CONSULTATION THEME',
+    section: '相談内容',
     kicker: '面談への期待',
     title: '今回の面談で希望することに最も近いものを教えてください',
-    help: '選択すると、そのまま回答が送信されます。',
+    help: '最も近いものを1つ選んでください。',
     options: [
       ['specific', '具体的な改善案まで相談したい'],
       ['organize', 'まずは現状と課題を整理したい'],
@@ -124,14 +124,21 @@ function renderQuestion() {
 
   const area = $('answer-area');
   area.innerHTML = '';
-  if (question.type === 'text') renderTextQuestion(question, area);
-  else renderChoiceQuestion(question, area);
 
+  if (question.type === 'text') {
+    renderTextQuestion(question, area);
+  } else if (question.type === 'multi') {
+    renderMultiChoiceQuestion(question, area);
+  } else {
+    renderChoiceQuestion(question, area);
+  }
+
+  const needsNextButton = question.type === 'text' || question.type === 'multi';
   $('back-button').disabled = currentIndex === 0 || submitting;
   $('next-button').disabled = !isCurrentAnswerValid() || submitting;
   $('next-button').textContent = '次へ';
-  $('next-button').style.display = question.options ? 'none' : 'block';
-  $('back-button').style.gridColumn = question.options ? '1 / -1' : 'auto';
+  $('next-button').style.display = needsNextButton ? 'block' : 'none';
+  $('back-button').style.gridColumn = needsNextButton ? 'auto' : '1 / -1';
 }
 
 function renderChoiceQuestion(question, area) {
@@ -139,26 +146,68 @@ function renderChoiceQuestion(question, area) {
   list.className = 'choice-list';
 
   question.options.forEach(([value, label], index) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = `choice-button${answers[question.id] === value ? ' selected' : ''}`;
-    button.innerHTML = `<span class="choice-index">${index + 1}</span><span>${escapeHtml(label)}</span>`;
-    button.disabled = submitting;
+    const button = createChoiceButton(index, label, answers[question.id] === value);
     button.addEventListener('click', () => {
       if (submitting) return;
+
       answers[question.id] = value;
-      document.querySelectorAll('.choice-button').forEach((item) => item.classList.remove('selected'));
+      list.querySelectorAll('.choice-button').forEach((item) => item.classList.remove('selected'));
       button.classList.add('selected');
 
       window.setTimeout(() => {
         if (currentIndex === questions.length - 1) submitSurvey();
         else advance();
-      }, 180);
+      }, 150);
     });
     list.appendChild(button);
   });
 
   area.appendChild(list);
+}
+
+function renderMultiChoiceQuestion(question, area) {
+  const selectedValues = Array.isArray(answers[question.id]) ? answers[question.id] : [];
+  answers[question.id] = selectedValues;
+
+  const list = document.createElement('div');
+  list.className = 'choice-list';
+
+  question.options.forEach(([value, label], index) => {
+    const button = createChoiceButton(index, label, selectedValues.includes(value));
+    button.setAttribute('aria-pressed', String(selectedValues.includes(value)));
+
+    button.addEventListener('click', () => {
+      if (submitting) return;
+
+      const currentValues = answers[question.id];
+      const existingIndex = currentValues.indexOf(value);
+
+      if (existingIndex >= 0) {
+        currentValues.splice(existingIndex, 1);
+        button.classList.remove('selected');
+        button.setAttribute('aria-pressed', 'false');
+      } else {
+        currentValues.push(value);
+        button.classList.add('selected');
+        button.setAttribute('aria-pressed', 'true');
+      }
+
+      $('next-button').disabled = !isCurrentAnswerValid();
+    });
+
+    list.appendChild(button);
+  });
+
+  area.appendChild(list);
+}
+
+function createChoiceButton(index, label, selected) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = `choice-button${selected ? ' selected' : ''}`;
+  button.innerHTML = `<span class="choice-index">${index + 1}</span><span>${escapeHtml(label)}</span>`;
+  button.disabled = submitting;
+  return button;
 }
 
 function renderTextQuestion(question, area) {
@@ -195,8 +244,17 @@ function renderTextQuestion(question, area) {
 
 function isCurrentAnswerValid() {
   const question = questions[currentIndex];
-  if (question.type === 'text') return Boolean((answers[question.id] || '').trim().length >= 2);
-  return Boolean(answers[question.id]);
+  const answer = answers[question.id];
+
+  if (question.type === 'text') {
+    return Boolean((answer || '').trim().length >= 2);
+  }
+
+  if (question.type === 'multi') {
+    return Array.isArray(answer) && answer.length > 0;
+  }
+
+  return Boolean(answer);
 }
 
 function advance() {
@@ -219,7 +277,23 @@ function goBack() {
   renderQuestion();
 }
 
-async function submitSurvey() {
+function prepareAnswersForSubmission() {
+  const submittedAnswers = { ...answers };
+  const concernQuestion = questions.find((question) => question.id === 'primaryConcern');
+
+  if (Array.isArray(submittedAnswers.primaryConcern)) {
+    submittedAnswers.primaryConcern = submittedAnswers.primaryConcern
+      .map((value) => {
+        const option = concernQuestion.options.find(([optionValue]) => optionValue === value);
+        return option ? option[1] : value;
+      })
+      .join('、');
+  }
+
+  return submittedAnswers;
+}
+
+function submitSurvey() {
   if (submitting || currentIndex !== questions.length - 1 || !isCurrentAnswerValid()) return;
 
   if (!CONFIG.endpoint) {
@@ -228,12 +302,6 @@ async function submitSurvey() {
   }
 
   submitting = true;
-  $('question-title').textContent = '回答を送信しています';
-  $('question-help').textContent = 'そのままお待ちください。';
-  $('answer-area').innerHTML = '';
-  $('back-button').disabled = true;
-  $('back-button').style.gridColumn = '1 / -1';
-  $('next-button').style.display = 'none';
 
   const params = new URLSearchParams(window.location.search);
   const payload = {
@@ -242,23 +310,20 @@ async function submitSurvey() {
     campaign: params.get('campaign') || params.get('utm_campaign') || '',
     referenceId: params.get('ref') || '',
     pageUrl: window.location.href,
-    answers: { ...answers }
+    answers: prepareAnswersForSubmission()
   };
 
-  try {
-    await fetch(CONFIG.endpoint, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(payload)
-    });
-    showScreen('screen-complete');
-  } catch (error) {
-    console.error(error);
-    submitting = false;
-    renderQuestion();
-    showToast('送信できませんでした。通信環境をご確認ください。');
-  }
+  showScreen('screen-complete');
+
+  fetch(CONFIG.endpoint, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload),
+    keepalive: true
+  }).catch((error) => {
+    console.error('Survey submission failed:', error);
+  });
 }
 
 function showToast(message) {
